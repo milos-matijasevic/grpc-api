@@ -66,7 +66,7 @@ SELECT create_hypertable('video_metrics', 'timestamp');
 Then copy current table in new hypertable
 https://docs.timescale.com/latest/getting-started/migrating-data
 
-This part isn't needed u can skip it  
+This part isn't needed it can be skipped  
 Download sqlite tools
 https://www.sqlite.org/download.html 
 ```bash
