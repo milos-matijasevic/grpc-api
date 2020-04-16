@@ -4,16 +4,15 @@ import (
 	"context"
 	"./proto"
 	"fmt"
-	"encoding/json"
 	"os"
 	"bufio"
 	"strings"
+	"io"
 	
 	"google.golang.org/grpc"
 )
 
 var client proto.FServiceClient
-
 
 func ReadLine() string {
 	reader := bufio.NewReader(os.Stdin)
@@ -22,7 +21,8 @@ func ReadLine() string {
 		c, _, _ = reader.ReadRune()
 	}
 	line, _ := reader.ReadString('\n')
-	line = string(c) + strings.Replace(line, "\r\n", "", -1)
+	line = strings.Replace(string(c) + line, "\r", "", -1)
+	line = strings.Replace(line, "\n", "", -1)
 	return line
 }
 func GetMoneyForEachPublisher(){
@@ -30,16 +30,26 @@ func GetMoneyForEachPublisher(){
 	fmt.Println("Enter end date in format yyyy-mm-dd hh-mm-ss.SS")
 	start := ReadLine()
 	end := ReadLine()
-
-	response, err := client.GetMoneyForEachPublisher(context.Background(), &proto.Request{StartDate: start, EndDate: end})
+	request := &proto.Request{StartDate: start, EndDate: end}
+	stream, err := client.GetMoneyForEachPublisher(context.Background(), request)
+	
 	if err != nil {
 		panic(err)
 	}
-	publisherRevenueMapJson, err := json.Marshal(response.PublisherRevenueMap)
-	if err != nil {
-		panic(err)
+	
+	fmt.Println()
+	fmt.Println("Publisher : Revenue")
+	for {
+		response, err := stream.Recv()
+		if err == io.EOF {
+			break
+		}
+		if err != nil {
+			panic(err)
+		}
+		fmt.Println(response.Publisher, " : " , response.Revenue)
 	}
-	fmt.Println(string(publisherRevenueMapJson))
+	fmt.Println()
 }
 
 func GetNumEventsForAdvertiser(){
@@ -55,17 +65,29 @@ func GetNumEventsForAdvertiser(){
 	eventName := ReadLine()
 	fmt.Scanf("%d", &advertiser)
 	var c byte
+	// To skip newline char
 	fmt.Scanf("%c", &c)
 
-	response, err := client.GetNumEventsForAdvertiser(context.Background(), &proto.Request{StartDate: start, EndDate: end, EventName: eventName, Advertiser: advertiser})
+	request := &proto.Request{StartDate: start, EndDate: end, EventName: eventName, Advertiser: advertiser}
+	stream, err := client.GetNumEventsForAdvertiser(context.Background(), request)
+	
 	if err != nil {
 		panic(err)
 	}
-	deviceEventNumMapJson, err := json.Marshal(response.DeviceEventNumMap)
-	if err != nil {
-		panic(err)
+	
+	fmt.Println()
+	fmt.Println("Device : Event count")
+	for {
+		response, err := stream.Recv()
+		if err == io.EOF {
+			break
+		}
+		if err != nil {
+			panic(err)
+		}
+		fmt.Println(response.Device, " : " , response.EventNum)
 	}
-	fmt.Println(string(deviceEventNumMapJson))
+	fmt.Println()
 }
 
 
@@ -76,7 +98,6 @@ func main(){
 	}
 	defer conn.Close()
 	client = proto.NewFServiceClient(conn)
-	
 	
 	var option int
 	fmt.Println("Menu: ")
@@ -99,7 +120,6 @@ func main(){
 		fmt.Println("3. Exit")
 		fmt.Scanf("%d", &option)
 	}
-	
 	//start := "2020-02-09 00:00:17.28"
 	//end := "2020-02-09 00:01:35.04"
 	

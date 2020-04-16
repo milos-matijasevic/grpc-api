@@ -1,17 +1,18 @@
 package main
 
 import (
-	"context"
 	"./proto"
 	"net"
-	//"time"
+	"time"
 	"fmt"
-	
+	"flag"
+
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/reflection"
 	
 	"github.com/jinzhu/gorm"
 	_ "github.com/jinzhu/gorm/dialects/sqlite"
+	_ "github.com/jinzhu/gorm/dialects/postgres"
 )
 
 
@@ -21,7 +22,7 @@ type Video_metric struct {
 	Device string `gorm:"type:character varying;not null"`
 	Session_id *string `gorm:"type:character varying"`
 	Impression_id *string `gorm:"type:character varying"`
-	Timestamp string `gorm:"type:timestamp without time zone;not null"`
+	Timestamp time.Time `gorm:"type:timestamp without time zone;not null"`
 	Price *int
 	Publisher_revenue *int
 	Our_revenue *int
@@ -36,19 +37,30 @@ type server struct {}
 
 type ResultPublisherRevenue struct {
   Publisher  int32
-  Total int32
+  Revenue int64
 }
 
 type ResultAdvertiserEventNum struct {
   Device  string
-  Total int32
+  EventNum int32
 }
 
 var db *gorm.DB
 var err error
 
 func main(){
-	db, err = gorm.Open("sqlite3", "./video_metrics.sqlite3?parseTime=true")
+	dbName := flag.String("dbType", "postgres", "a string")
+	
+	flag.Parse()
+	if *dbName == "postgres" {
+		db, err = gorm.Open("postgres", "host=localhost port=5432 user=postgres dbname=grpcchallenge password=root sslmode=disable")
+	} else if *dbName == "sqlite3" {
+		db, err = gorm.Open("sqlite3", "./video_metrics.sqlite3?parseTime=true")
+	} else {
+		fmt.Println("dbType should be postgres or sqlite")
+		return
+	}
+
 	if err != nil {
 		panic(err)
 	}
@@ -56,11 +68,6 @@ func main(){
 	
 	fmt.Println(db.HasTable("video_metrics"))
 	db.AutoMigrate(&Video_metric{})
-	
-	//fmt.Println(db.HasTable(&Video_metric{}))
-	//var metric Video_metric
-	//db.First(&metric, "device = ?", "mobile")
-	//fmt.Println(metric)
 	
 	listener, err := net.Listen("tcp", ":4040")
 	if err != nil {
@@ -76,46 +83,65 @@ func main(){
 	}
 }
 
-func (s *server)GetMoneyForEachPublisher(ctx context.Context, request *proto.Request)(*proto.Response, error){
+func (s *server)GetMoneyForEachPublisher(request *proto.Request, stream proto.FService_GetMoneyForEachPublisherServer) error {
+	
 	var reply proto.Response
-	startDate := request.GetStartDate()
-	endDate :=  request.GetEndDate()
-	rows, err := db.Table("video_metrics").Select("advertiser_id as publisher, sum(publisher_revenue) as total").Where("timestamp BETWEEN ? AND ?", startDate, endDate).Group("advertiser_id").Rows()
+	layout := "2006-01-02 15:04:05.00"
+	startDate, err := time.Parse(layout, request.GetStartDate())
 	if err != nil {
-		return nil, err
+		return err
 	}
-	reply.PublisherRevenueMap = make(map[int32]int32)
+	endDate, err :=  time.Parse(layout, request.GetEndDate())
+	if err != nil {
+		return err
+	}
+	
+	rows, err := db.Table("video_metrics").Select("advertiser_id as publisher, sum(publisher_revenue) as revenue").Where("timestamp BETWEEN ? AND ?", startDate, endDate).Group("advertiser_id").Rows()
+	if err != nil {
+		return err
+	}
 	var res ResultPublisherRevenue
 	
 	for rows.Next() {	
 		db.ScanRows(rows, &res)
-		reply.PublisherRevenueMap[res.Publisher] = res.Total
+		reply.Publisher = res.Publisher
+		reply.Revenue = res.Revenue
+		if err := stream.Send(&reply); err != nil {
+			return err
+		}
 	}
-
-	return &reply, nil
+	return nil
 }
 
-func (s *server)GetNumEventsForAdvertiser(ctx context.Context, request *proto.Request)(*proto.Response, error){
+func (s *server)GetNumEventsForAdvertiser(request *proto.Request, stream proto.FService_GetNumEventsForAdvertiserServer) error {
+	
 	var reply proto.Response
-	startDate := request.GetStartDate()
-	endDate :=  request.GetEndDate()
+	layout := "2006-01-02 15:04:05.00"
+	startDate, err := time.Parse(layout, request.GetStartDate())
+	if err != nil {
+		return err
+	}
+	endDate, err :=  time.Parse(layout, request.GetEndDate())
+	if err != nil {
+		return err
+	}
 	eventName := request.GetEventName()
 	advertiser := request.GetAdvertiser()
-	rows, err := db.Table("video_metrics").Select("device as device, count(*) as total").Where("event_name = ? AND advertiser_id = ? AND timestamp BETWEEN ? AND ?", eventName, advertiser, startDate, endDate).Group("device").Rows()
+	rows, err := db.Table("video_metrics").Select("device as device, count(*) as event_num").Where("event_name = ? AND advertiser_id = ? AND timestamp BETWEEN ? AND ?", eventName, advertiser, startDate, endDate).Group("device").Rows()
 	if err != nil {
-		return nil, err
+		return err
 	}
-	reply.DeviceEventNumMap = make(map[string]int32)
 	var res ResultAdvertiserEventNum
 	
 	for rows.Next() {	
 		db.ScanRows(rows, &res)
-		reply.DeviceEventNumMap[res.Device] = res.Total
+		reply.Device = res.Device
+		reply.EventNum = res.EventNum
+		if err := stream.Send(&reply); err != nil {
+			return err
+		}
 	}
-
-	return &reply, nil
+	
+	return nil
+	
 }
-
-
-
-

@@ -1,0 +1,23 @@
+syntax = "proto3";
+
+package proto;
+option go_package = ".;proto";
+
+message Request {
+	string startDate = 1;
+	string endDate = 2;
+	string eventName = 3;
+	int32 advertiser = 4;
+}
+
+message Response {
+	int32 publisher = 1;
+	int64 revenue = 2;
+	string device = 3;
+	int32 eventNum = 4;
+}
+
+service FService {
+	rpc GetMoneyForEachPublisher(stream Request) returns (stream Response);
+	rpc GetNumEventsForAdvertiser(stream Request) returns (stream Response);
+}
