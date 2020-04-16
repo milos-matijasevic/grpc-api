@@ -13,12 +13,12 @@ go get -u google.golang.org/grpc
 
 Download version for your needs
 https://github.com/protocolbuffers/protobuf/releases
-Add bin to path environment variable
+and add bin folder to path environment variable
 
 ```bash
 go get -u github.com/golang/protobuf/protoc-gen-go
 ```
-Add bin to path environment variable
+Add bin folder  to path environment variable
 
 Get gorm
 ```bash
@@ -26,7 +26,8 @@ go get -u github.com/jinzhu/gorm
 ```
 
 Install Postresql
-https://www.postgresql.org/download/windows/
+https://www.postgresql.org/download/windows/ 
+Add bin folder  to path environment variable
 
 Install TimescaleDB
 https://docs.timescale.com/latest/getting-started/installation
@@ -66,7 +67,7 @@ https://docs.timescale.com/latest/getting-started/creating-hypertables
 Then copy current table in new hypertable
 https://docs.timescale.com/latest/getting-started/migrating-data
 
-// This part isn't needed u can skip it
+This part isn't needed u can skip it
 Download sqlite tools
 https://www.sqlite.org/download.html 
 ```bash
@@ -113,7 +114,7 @@ client
 ```
 
 Client is implemented as a simple menu
-!Client menu](https://github.com/milos-matijasevic/grpc-api/blob/master/src/client_menu.png)
+![Client menu](https://github.com/milos-matijasevic/grpc-api/blob/master/src/client_menu.png)
 
 There is 2 implementation, one with bidirectional streaming and other with server streaming side.
 For primary, choosen is server streaming side.
