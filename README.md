@@ -118,7 +118,16 @@ Client is implemented as a simple menu
 There is 2 implementation, one with bidirectional streaming and other with server streaming side.
 For primary, choosen is server streaming side.
 
-If you want to use bidirectional implementation, build project again with sufix BidirectionalStream for client, server and proto file clientBidirectionalStream.go, serverBidirectionalStream.go, protoBidirectionalStream.proto.
+If you want to use bidirectional implementation, build project again with different files, first protoc 
+```bash
+protoc --proto_path=proto --proto_path=third_party --go_out=plugins=grpc:protobi serviceBidirectionalStream.proto
+```
+
+Then server and client with sufix BidirectionalStream
+```bash
+go run serverBidirectionalStream.go
+go run clientBidirectionalStream.go
+```
 
 Also there is 2 possible databases to use, postgres(with timescaledDB) and sqlite3, you can choose which one you want to use when you start the server with parameter dbType, default value for dbType is postgres.
 Example:
