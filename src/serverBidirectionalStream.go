@@ -1,7 +1,7 @@
 package main
 
 import (
-	"./proto"
+	"./protobi"
 	"net"
 	"time"
 	"fmt"
@@ -37,7 +37,7 @@ type server struct {}
 
 type ResultPublisherRevenue struct {
   Publisher  int32
-  Revenue int32
+  Revenue int64
 }
 
 type ResultAdvertiserEventNum struct {

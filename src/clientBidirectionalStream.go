@@ -2,7 +2,7 @@ package main
 
 import (
 	"context"
-	"./proto"
+	"./protobi"
 	"fmt"
 	"os"
 	"bufio"
