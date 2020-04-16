@@ -26,8 +26,7 @@ go get -u github.com/jinzhu/gorm
 ```
 
 Install Postresql
-https://www.postgresql.org/download/windows/ 
-Add bin folder  to path environment variable
+https://www.postgresql.org/download/windows/ and add bin folder  to path environment variable
 
 Install TimescaleDB
 https://docs.timescale.com/latest/getting-started/installation
@@ -41,7 +40,8 @@ Make new database named grpcchallenge and add timescaledb extension
 username=postgres, password=root
 https://docs.timescale.com/latest/getting-started/setup
 
-Then create table video_metrics 
+Then create table video_metrics  
+https://docs.timescale.com/latest/getting-started/creating-hypertables
 ```sql
 DROP TABLE IF EXISTS "video_metrics";
 CREATE TABLE video_metrics (
@@ -62,12 +62,11 @@ CREATE TABLE video_metrics (
 );
 SELECT create_hypertable('video_metrics', 'timestamp');
 ```
-https://docs.timescale.com/latest/getting-started/creating-hypertables
 
 Then copy current table in new hypertable
 https://docs.timescale.com/latest/getting-started/migrating-data
 
-This part isn't needed u can skip it
+This part isn't needed u can skip it  
 Download sqlite tools
 https://www.sqlite.org/download.html 
 ```bash
@@ -113,7 +112,7 @@ go build client.go
 client
 ```
 
-Client is implemented as a simple menu
+Client is implemented as a simple menu  
 ![Client menu](https://github.com/milos-matijasevic/grpc-api/blob/master/src/client_menu.png)
 
 There is 2 implementation, one with bidirectional streaming and other with server streaming side.
