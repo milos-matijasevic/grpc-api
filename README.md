@@ -132,7 +132,7 @@ go run clientBidirectionalStream.go
 Also there is 2 possible databases to use, postgres(with timescaledDB) and sqlite3, you can choose which one you want to use when you start the server with parameter dbType, default value for dbType is postgres.
 Example:
 ```bash
-go run server.go dbType=sqlite3
+go run server.go -dbType=sqlite3
 ```
 
 
